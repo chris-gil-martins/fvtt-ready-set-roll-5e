@@ -58,7 +58,8 @@ export class RollUtility {
      * @returns {Promise<Roll>} The roll result of the wrapper.
      */
     static async rollActorWrapper(caller, wrapper, options, id, bypass = false) {
-        const advMode = CoreUtility.eventToAdvantage(options.event);        
+        const advMode = CoreUtility.eventToAdvantage(options.event);
+        const advBool = typeof options.advantage === "boolean"
 
         const bonuses = [];
         if (options?.event?.button === CONFIG[MODULE_SHORT].situRollMouseButton && !bypass)
@@ -74,10 +75,11 @@ export class RollUtility {
         const params = {
             fastForward: !bypass,
             chatMessage: bypass,
-            advantage: advMode > 0,
-            disadvantage: advMode < 0,
+            advantage: advBool ? options.advantage : advMode > 0,
+            disadvantage: advBool ? !options.advantage : advMode < 0,
             rollMode: options?.rollMode,
-            parts: bonuses
+            parts: bonuses,
+            isConcSave: options.isConcSave
         }
 
         return id ? wrapper.call(caller, id, params) : wrapper.call(caller, params);
@@ -100,22 +102,22 @@ export class RollUtility {
 
         const advMode = CoreUtility.eventToAdvantage(options?.event);
         const isAltRoll = CoreUtility.eventToAltRoll(options?.event) || (options?.isAltRoll ?? false);
-        
+
         const config = foundry.utils.mergeObject(options, ItemUtility.getRollConfigFromItem(caller, isAltRoll), { recursive: false });
         const configureDialog = config?.configureDialog ?? (caller?.type === ITEM_TYPE.SPELL ? true : false);
 
         // Handle quantity when uses are not consumed
         // While the rest can be handled by Item._getUsageUpdates(), this one thing cannot
-        if (caller.id && config.consumeQuantity && !config.consumeUsage) {  
+        if (caller.id && config.consumeQuantity && !config.consumeUsage) {
             if (caller.system.quantity === 0) {
-                ui.notifications.warn(CoreUtility.localize("DND5E.ItemNoUses", {name: caller.name})); 
-                return;  
+                ui.notifications.warn(CoreUtility.localize("DND5E.ItemNoUses", {name: caller.name}));
+                return;
             }
 
             config.consumeQuantity = false;
 
             const itemUpdates = {};
-			itemUpdates["system.quantity"] = Math.max(0, caller.system.quantity - 1);            
+			itemUpdates["system.quantity"] = Math.max(0, caller.system.quantity - 1);
             await caller.update(itemUpdates);
         }
 
@@ -157,7 +159,7 @@ export class RollUtility {
 
     /**
      * Rolls a skill check from a given actor.
-     * @param {Actor} actor The actor object from which the roll is being called. 
+     * @param {Actor} actor The actor object from which the roll is being called.
      * @param {String} skillId The id of the skill being rolled.
      * @param {Roll} roll The roll object that was made for the check.
      * @param {Object} options Additional options for rolling a skill.
@@ -190,13 +192,13 @@ export class RollUtility {
 
     /**
      * Rolls a tool check from a given actor.
-     * @param {Actor} actor The actor object from which the roll is being called. 
+     * @param {Actor} actor The actor object from which the roll is being called.
      * @param {String} toolId The id of the tool being rolled.
      * @param {Roll} roll The roll object that was made for the check.
      * @param {Object} options Additional options for rolling a tool.
      * @returns {Promise<QuickRoll>} The created quick roll.
      */
-    static async rollTool(actor, toolId, roll, options = {}) {        
+    static async rollTool(actor, toolId, roll, options = {}) {
         LogUtility.log(`Quick rolling tool check from Actor '${actor.name}'.`);
 
         if (!(toolId in CONFIG[MODULE_SHORT].combinedToolTypes)) {
@@ -205,8 +207,8 @@ export class RollUtility {
             return null;
 		}
 
-        const tool = toolId in CONFIG.DND5E.toolIds 
-            ? CoreUtility.getBaseItemIndex(CONFIG.DND5E.toolIds[toolId]) 
+        const tool = toolId in CONFIG.DND5E.toolIds
+            ? CoreUtility.getBaseItemIndex(CONFIG.DND5E.toolIds[toolId])
             : { name: CONFIG[MODULE_SHORT].combinedToolTypes[toolId] };
 
         const abilityId = options.ability || (actor.system.tools[toolId]?.ability ?? "int");
@@ -227,7 +229,7 @@ export class RollUtility {
 
     /**
      * Rolls an ability test from a given actor.
-     * @param {Actor} actor The actor object from which the roll is being called. 
+     * @param {Actor} actor The actor object from which the roll is being called.
      * @param {String} abilityId The id of the ability being rolled.
      * @param {Roll} roll The roll object that was made for the check.
      * @param {Object} options Additional options for rolling an ability test.
@@ -241,7 +243,7 @@ export class RollUtility {
                 { type: "Ability", label: abilityId, dictionary: "CONFIG.DND5E.abilities" }));
             return null;
 		}
-        
+
         const ability = CONFIG.DND5E.abilities[abilityId];
 
         const title = `${ability.label} ${CoreUtility.localize(`${MODULE_SHORT}.chat.${ROLL_TYPE.ABILITY_TEST}`)}`;
@@ -251,7 +253,7 @@ export class RollUtility {
 
     /**
      * Rolls an ability save from a given actor.
-     * @param {Actor} actor The actor object from which the roll is being called. 
+     * @param {Actor} actor The actor object from which the roll is being called.
      * @param {String} abilityId The id of the ability being rolled.
      * @param {Roll} roll The roll object that was made for the check.
      * @param {Object} options Additional options for rolling an ability save.
@@ -282,7 +284,7 @@ export class RollUtility {
      */
     static async rollDeathSave(actor, roll, options = {}) {
         if (!roll) return null;
-        
+
         LogUtility.log(`Quick rolling death save from Actor '${actor.name}'.`);
 
         const title = roll.options.flavor;
@@ -308,7 +310,7 @@ export class RollUtility {
         } else {
             params.slotLevel = item.system.level;
         }
-        
+
         params.createMessage = createMessage;
         item.system.level = params.spellLevel ?? item.system.level;
 
@@ -325,7 +327,7 @@ export class RollUtility {
     static getCritTypeForDie(die, options = {}) {
         if (!die) return null;
 
-        const { crit, fumble } = _countCritsFumbles(die, options)		
+        const { crit, fumble } = _countCritsFumbles(die, options)
 
         return _getCritResult(crit, fumble);
     }
@@ -343,7 +345,7 @@ export class RollUtility {
 		let totalCrit = 0;
 		let totalFumble = 0;
 
-        for (const die of roll.dice) {			
+        for (const die of roll.dice) {
             const { crit, fumble } = _countCritsFumbles(die, options)
             totalCrit += crit;
             totalFumble += fumble;
@@ -372,7 +374,7 @@ export class RollUtility {
 
         params.forceMultiRoll = true;
         const upgradedRoll = await RollUtility.ensureMultiRoll(roll, params);
-        
+
         const d20BaseTerm = upgradedRoll.terms.find(d => d.faces === 20);
         d20BaseTerm.keep(targetState);
         d20BaseTerm.modifiers.push(targetState);
@@ -384,7 +386,7 @@ export class RollUtility {
      * Rerolls a specific die result inside a given term.
      * @param {Die} term The die term containing the die being rerolled.
      * @param {Number} targetDie The index of the specific die of the term being rerolled.
-     * @returns 
+     * @returns
      */
     static async rerollSpecificDie(term, targetDie) {
         if (!term) {
@@ -398,7 +400,7 @@ export class RollUtility {
         }
 
         const rerolledDie = await new Die({ number: 1, faces: term.faces }).evaluate({ async: true });
-        
+
         term.results[targetDie].rerolled = true;
         term.results[targetDie].active = false;
         term.results.splice(targetDie + 1, 0, foundry.utils.duplicate(rerolledDie.results[0]));
@@ -439,11 +441,11 @@ export class RollUtility {
             roll.terms[roll.terms.indexOf(d20BaseTerm)] = d20Forced;
         }
 
-        const critOptions = { 
+        const critOptions = {
             critThreshold: roll.options.critical,
             fumbleThreshold: roll.options.fumble,
             targetValue: roll.options.targetValue,
-            ignoreDiscarded: true 
+            ignoreDiscarded: true
         };
         const critType = RollUtility.getCritTypeForDie( roll.terms.find(d => d.faces === 20), critOptions);
 
@@ -475,11 +477,11 @@ export class RollUtility {
             baseTerms.push(baseTerm);
         });
 
-        return await Roll.fromTerms(baseTerms).evaluate({ 
+        return await Roll.fromTerms(baseTerms).evaluate({
             maximize: options.powerfulCritical,
             async: true
         });
-    }    
+    }
 
     /**
      * Generates a critical roll from a given base roll.
@@ -496,7 +498,7 @@ export class RollUtility {
         const critTerms = [];
         baseTerms.forEach(term => {
             let critTerm = RollTerm.fromData(term);
-            
+
             if (critTerm instanceof NumericTerm) {
                 critTerm = options.multiplyNumeric ? critTerm : new NumericTerm({ number: 0 }).evaluate({ async: false });
             }
@@ -600,7 +602,7 @@ async function _getItemRoll(item, params, rollType) {
     const isFumble = params?.isFumble ?? false;
     const isMultiRoll = params?.isMultiRoll ?? false;
     const isAltRoll = params?.isAltRoll ?? false;
-    const elvenAccuracy = params?.elvenAccuracy ?? false;    
+    const elvenAccuracy = params?.elvenAccuracy ?? false;
     const slotLevel = params?.slotLevel ?? undefined;
     const spellLevel = params?.spellLevel ?? undefined;
 
@@ -622,11 +624,11 @@ function _getCritResult(crit, fumble)
     if (crit > 0 && fumble > 0) {
         return CRIT_TYPE.MIXED;
     }
-    
+
     if (crit > 0) {
         return CRIT_TYPE.SUCCESS;
     }
-    
+
     if (fumble > 0) {
         return CRIT_TYPE.FAILURE;
     }
