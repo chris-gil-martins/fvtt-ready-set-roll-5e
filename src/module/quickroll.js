@@ -22,8 +22,8 @@ export class QuickRoll {
 
 			if (item) {
 				this.item = item;
-			} 
-			
+			}
+
 			if (actor) {
 				this.actor = actor;
 			}
@@ -153,7 +153,7 @@ export class QuickRoll {
 
 			roll.item = storedData && roll.actor ? await Item5e.create(storedData, { parent: roll.actor, temporary: true }) : roll.actor?.items.get(data.itemId);
 		}
-		
+
 		return roll;
 	}
 
@@ -226,10 +226,10 @@ export class QuickRoll {
 		if (!this.hasPermission || !this.fields || this.fields.length === 0) {
 			return false;
 		}
-		
+
 		// For item rolls, simply reroll the item without any consumes.
 		if (this.item) {
-			await RollUtility.rollItem(this.item, { 
+			await RollUtility.rollItem(this.item, {
 				forceHideDescription: true,
 				slotLevel: this.params?.slotLevel,
 				spellLevel: this.params?.spellLevel
@@ -238,10 +238,10 @@ export class QuickRoll {
 		}
 
 		// For actor rolls, we don't know the type of actor roll so must reroll the fields directly.
-		if (this.actor) {			
+		if (this.actor) {
 			// Rolls in duplicates are unpacked and must be recreated.
 			const fields = CoreUtility.repackQuickRollFields(foundry.utils.duplicate(this.fields));
-			
+
 			console.log(fields);
 
 			fields.forEach(field => {
@@ -249,8 +249,8 @@ export class QuickRoll {
 					field[1].roll = field[1].roll.reroll({ async: false });
 				}
 			});
-	
-			const roll = new QuickRoll(this.actor, {}, fields);	
+
+			const roll = new QuickRoll(this.actor, {}, fields);
 			await roll.toMessage();
 			return true;
 		}
@@ -260,9 +260,9 @@ export class QuickRoll {
 
 	/**
 	 * Upgrades a specific roll in one of the roll fields to a multi roll if possible.
-	 * @param {Number} targetId The index of the roll field to upgrade. 
+	 * @param {Number} targetId The index of the roll field to upgrade.
 	 * @param {ROLL_STATE} targetState The target state of the upgraded multi roll (advantage or disadvantage);
-	 * @returns {Boolean} Whether or not the ugprade was succesful. 
+	 * @returns {Boolean} Whether or not the ugprade was succesful.
 	 */
 	async upgradeToMultiRoll(targetId, targetState) {
 		const targetField = this.fields[targetId];
@@ -287,7 +287,7 @@ export class QuickRoll {
 	/**
 	 * Upgrades a specific damage roll in one of the damage fields to a crit if possible.
 	 * @param {Number} targetId The index of the damage field to upgrade.
-	 * @returns {Boolean} Whether or not the ugprade was succesful. 
+	 * @returns {Boolean} Whether or not the ugprade was succesful.
 	 */
 	async upgradeToCrit(targetId) {
 		const targetField = this.fields[targetId];
@@ -307,10 +307,10 @@ export class QuickRoll {
 			criticalBonusDice: this.item?.system.actionType === "mwak" ? (this.actor.getFlag("dnd5e", "meleeCriticalDamageDice") ?? 0) : 0,
 			criticalBonusDamage: this.item?.system.critical.damage ?? ""
 		}
-		
+
 		const damageFields = this.fields.filter(f => f[0] === FIELD_TYPE.DAMAGE);
-		targetField[1].baseRoll = await RollUtility.getCritBaseRoll(targetField[1].baseRoll, damageFields.indexOf(targetField), this.item?.getRollData(), options);
-		targetField[1].critRoll = await RollUtility.getCritRoll(targetField[1].baseRoll, damageFields.indexOf(targetField), this.item?.getRollData(), options);
+		// targetField[1].baseRoll = await RollUtility.getCritBaseRoll(targetField[1].baseRoll, damageFields.indexOf(targetField), this.item?.getRollData(), options);
+		targetField[1].critRoll = await RollUtility.getCritBaseRoll(targetField[1].baseRoll, damageFields.indexOf(targetField), this.item?.getRollData(), options);
 
 		await CoreUtility.tryRollDice3D(targetField[1].critRoll);
 
@@ -321,7 +321,7 @@ export class QuickRoll {
 	 * Upgrades a quick roll that has damage to one with damage actually rolled.
 	 * Used for manually rolling damage via chat buttons, if the setting is enabled.
 	 * @param {Number} targetId The index of the manual damage button field.
-	 * @returns {Promise<Boolean>} Whether or not the ugprade was succesful. 
+	 * @returns {Promise<Boolean>} Whether or not the ugprade was succesful.
 	 */
 	async upgradeToDamageRoll(targetId) {
 		const targetField = this.fields[targetId];
@@ -332,14 +332,14 @@ export class QuickRoll {
 
 		const newFields = await ItemUtility.getSpecificFieldsFromItem(this.item, this.params, [ FIELD_TYPE.DAMAGE ])
 
-		this.fields.splice(targetId, 1, ...newFields);	
-		this.processed = false;	
+		this.fields.splice(targetId, 1, ...newFields);
+		this.processed = false;
 
 		const promises = [];
 		newFields.forEach(field => {
 			if (field[1].baseRoll) {
 				promises.push(Promise.resolve(CoreUtility.tryRollDice3D(field[1].baseRoll)));
-			}			
+			}
 
 			if (field[1].critRoll) {
 				promises.push(Promise.resolve(CoreUtility.tryRollDice3D(field[1].critRoll)));
@@ -357,7 +357,7 @@ export class QuickRoll {
 	 * @param {Number} targetRoll The index of the specific roll of the field being rerolled.
 	 * @param {Number} targetPart The index of the specific part of the roll being rerolled.
 	 * @param {Number} targetDie The index of the specific die of the part being rerolled.
-	 * @returns {Promise<Boolean>} Whether or not the reroll was succesful. 
+	 * @returns {Promise<Boolean>} Whether or not the reroll was succesful.
 	 */
 	async rerollDie(targetId, targetRoll, targetPart, targetDie) {
 		const targetField = this.fields[targetId];
@@ -383,7 +383,7 @@ export class QuickRoll {
 
 		if (!roll) {
 			return false;
-		}		
+		}
 
 		const terms = roll.terms;
 		const part = terms.filter(t => t instanceof Die)[targetPart];
@@ -398,7 +398,7 @@ export class QuickRoll {
 				targetField[1].critRoll = Roll.fromTerms(terms);
 			}
 		}
-		
+
 		return true;
 	}
 
@@ -486,11 +486,11 @@ export class QuickRoll {
 	 */
 	_getChatMessageRolls() {
 		const rolls = [];
-	
+
         if (this.fields.length === 0) {
             return rolls;
         }
-		
+
 		// If we need to add damage that has no die rolls in it, we have to add a safety die with no value.
 		// Otherwise, when there is a d20 present, dnd5e will attempt to interpret all this as a d20 roll and error.
 		const safety = new Die({ number: 1, faces: 0 }).evaluate({ async: false });
@@ -499,17 +499,17 @@ export class QuickRoll {
 
 		// Concatenate damage rolls into a single roll (for apply damage context menu).
         const damageFields = this.fields.filter(f => f[0] === FIELD_TYPE.DAMAGE).map(f => f[1]);
-		
+
 		damageFields.forEach(field => {
 			if (field.baseRoll) {
 				terms.push(plus);
 				terms.push(...field.baseRoll.terms);
-			}		
+			}
 
 			if (field.critRoll) {
 				terms.push(plus);
 				terms.push(...field.critRoll.terms);
-			}			
+			}
 		});
 
 		// Damage rolls must be added first into index 0 for applyChatCardDamage() to work.

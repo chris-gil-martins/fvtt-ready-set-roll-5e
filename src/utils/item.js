@@ -30,14 +30,14 @@ export class ItemUtility {
     /**
      * Generates a list of the different fields required for this item roll.
      * Will only generate fields that are available and enabled via the roll configuraton flags.
-     * @param {Item} item The item from which to retrieve the roll fields. 
+     * @param {Item} item The item from which to retrieve the roll fields.
      * @param {Object} params Addtional parameters for the item roll.
      * @returns {Promies<Array>} A list of fields as specified by the roll configuration.
      */
     static async getFieldsFromItem(item, params) {
         ItemUtility.ensureFlagsOnitem(item);
         ItemUtility.ensureItemParams(item, params);
-        
+
         const manualDamageMode = SettingsUtility.getSettingValue(SETTING_NAMES.MANUAL_DAMAGE_MODE);
         const manualDamage = manualDamageMode === 2 || (manualDamageMode === 1 && item.hasAttack);
         const applyEffects = CoreUtility.hasModule(MODULE_DAE) && SettingsUtility.getSettingValue(SETTING_NAMES.APPLY_EFFECTS_ENABLED);
@@ -90,11 +90,11 @@ export class ItemUtility {
 
         return fields;
     }
-    
+
     /**
      * Generates a list of specific fields from this item roll, instead of generating all.
      * Will only generate fields if they are available and enabled via the roll configuraton flags.
-     * @param {Item} item The item from which to retrieve the roll fields. 
+     * @param {Item} item The item from which to retrieve the roll fields.
      * @param {Object} params Addtional parameters for the item roll.
      * @param {FIELD_TYPE} filter The list of field types to actually generate.
      * @returns {Promies<Array>} A list of fields requested as specified by the roll configuration.
@@ -116,12 +116,12 @@ export class ItemUtility {
 
         return fields;
     }
-    
+
     /**
      * Retrieves a roll configuration to pass to the default Foundry VTT item.use().
      * This configuration largely handles what the item will consume, as specified in the roll configuration tab.
      * @param {Item} item The item from which to retrieve the roll configuration.
-     * @param {Boolean} isAltRoll Whether to check the alternate roll configuration for the item or not. 
+     * @param {Boolean} isAltRoll Whether to check the alternate roll configuration for the item or not.
      * @returns {Object} A roll configuration in the format necessary for the dnd5e system.
      */
     static getRollConfigFromItem(item, isAltRoll = false) {
@@ -130,7 +130,7 @@ export class ItemUtility {
 
         const config = {}
 
-        if (item?.hasAreaTarget && item?.flags[MODULE_SHORT].quickTemplate) { 
+        if (item?.hasAreaTarget && item?.flags[MODULE_SHORT].quickTemplate) {
             config.createMeasuredTemplate = item.flags[MODULE_SHORT].quickTemplate[isAltRoll ? "altValue" : "value"];
         }
         if (item?.hasQuantity && item?.flags[MODULE_SHORT].consumeQuantity) {
@@ -144,28 +144,28 @@ export class ItemUtility {
         }
 
         return config;
-    }   
+    }
 
     /**
      * Gets a specific value for a set module flag from an item.
      * @param {Item} item The item from which to retrieve the flag value.
      * @param {String} flag The identifier of the flag to retrieve.
-     * @param {Boolean} isAltRoll Whether to check the alternate roll configuration for the item or not. 
+     * @param {Boolean} isAltRoll Whether to check the alternate roll configuration for the item or not.
      * @returns {Boolean} Whether the flag is set to true or false.
      */
     static getFlagValueFromItem(item, flag, isAltRoll = false) {
         if (item?.flags[MODULE_SHORT][flag]) {
             return item.flags[MODULE_SHORT][flag][isAltRoll ? "altValue" : "value"] ?? false;
         }
-        
+
         return false;
     }
 
     /**
      * Gets a specific context field for a given damage field index.
-     * @param {Item} item The item from which to retrieve the context value. 
-     * @param {Number} index The index of the damage field for which to get context. 
-     * @returns 
+     * @param {Item} item The item from which to retrieve the context value.
+     * @param {Number} index The index of the damage field for which to get context.
+     * @returns
      */
     static getDamageContextFromItem(item, index) {
         if (item?.flags[MODULE_SHORT].quickDamage) {
@@ -173,7 +173,7 @@ export class ItemUtility {
 
             const itemPartsCount = item.system.damage.parts.length;
             const ammoPartsCount = consumeTarget?.system.damage.parts.length ?? 0;
-            
+
             if (index < itemPartsCount) {
                 return item.flags[MODULE_SHORT].quickDamage.context[index];
             }
@@ -214,8 +214,8 @@ export class ItemUtility {
 
     /**
      * Ensure that item parameters are available for the item roll, at least at default values.
-     * @param {Item} item 
-     * @param {Object} params 
+     * @param {Item} item
+     * @param {Object} params
      */
     static ensureItemParams(item, params) {
         params = params ?? {};
@@ -223,7 +223,7 @@ export class ItemUtility {
         params.damageFlags = ItemUtility.getFlagValueFromItem(item, "quickDamage", params.isAltRoll);
         params.effectFlags = ItemUtility.getFlagValueFromItem(item, "quickEffects", params.isAltRoll);
         params.versatile = item.isVersatile ? ItemUtility.getFlagValueFromItem(item, "quickVersatile", params.isAltRoll) : false;
-        params.elvenAccuracy = (item.actor?.flags?.dnd5e?.elvenAccuracy && 
+        params.elvenAccuracy = (item.actor?.flags?.dnd5e?.elvenAccuracy &&
             CONFIG.DND5E.characterFlags.elvenAccuracy.abilities.includes(item.abilityMod)) || undefined
     }
 
@@ -306,7 +306,7 @@ export class ItemUtility {
         }
 
         item.flags[MODULE_SHORT] = moduleFlags;
-        
+
         ItemUtility.ensurePropertiesOnItem(item);
     }
 }
@@ -329,7 +329,7 @@ function _getConsumeTargetFromItem(item) {
 
 /**
  * Adds a render field for item chat flavor.
- * @param {Array} fields The current array of fields to add to. 
+ * @param {Array} fields The current array of fields to add to.
  * @param {Object} chatData The chat data for the item (from item.getChatData).
  * @private
  */
@@ -347,8 +347,8 @@ function _addFieldFlavor(fields, chatData) {
 
 /**
  * Adds a render field for item description.
- * @param {Array} fields The current array of fields to add to. 
- * @param {Object} chatData The chat data for the item (from item.getChatData). 
+ * @param {Array} fields The current array of fields to add to.
+ * @param {Object} chatData The chat data for the item (from item.getChatData).
  * @private
  */
 function _addFieldDescription(fields, chatData) {
@@ -365,7 +365,7 @@ function _addFieldDescription(fields, chatData) {
 
 /**
  * Adds a render field for item footer properties.
- * @param {Array} fields The current array of fields to add to. 
+ * @param {Array} fields The current array of fields to add to.
  * @param {Object} chatData The chat data for the item (from item.getChatData).
  * @private
  */
@@ -380,7 +380,7 @@ function _addFieldFooter(fields, chatData) {
 
 /**
  * Adds a render field for item save DC button.
- * @param {Array} fields The current array of fields to add to. 
+ * @param {Array} fields The current array of fields to add to.
  * @param {Item} item The item from which to derive the field.
  * @private
  */
@@ -401,7 +401,7 @@ function _addFieldSaveButton(fields, item) {
 
 /**
  * Adds a render field for manual damage roll button.
- * @param {Array} fields The current array of fields to add to. 
+ * @param {Array} fields The current array of fields to add to.
  * @param {Item} item The item from which to derive the field.
  * @private
  */
@@ -417,18 +417,18 @@ function _addFieldDamageButton(fields, item) {
 
 /**
  * Adds a render field for apply active effects button.
- * @param {Array} fields The current array of fields to add to. 
+ * @param {Array} fields The current array of fields to add to.
  * @param {Item} item The item from which to derive the field.
  * @private
  */
- function _addFieldEffectsButton(fields, item, params) {    
+ function _addFieldEffectsButton(fields, item, params) {
     ItemUtility.ensurePropertiesOnItem(item);
 
     if (item.hasEffects) {
         if (!Object.values(params.effectFlags).some(f => f === true)) {
             return;
         }
-       
+
         const activeEffects = item.collections.effects.filter((effect) => !effect.disabled);
 
         let effectsToApply = [];
@@ -449,7 +449,7 @@ function _addFieldDamageButton(fields, item) {
 
 /**
  * Adds a render field for item attack roll.
- * @param {Array} fields The current array of fields to add to. 
+ * @param {Array} fields The current array of fields to add to.
  * @param {Item} item The item from which to derive the field.
  * @param {Object} params Additional parameters for the attack roll.
  * @private
@@ -495,7 +495,7 @@ async function _addFieldAttack(fields, item, params) {
 
 /**
  * Adds render fields for item damage rolls and computes critical hits.
- * @param {Array} fields The current array of fields to add to. 
+ * @param {Array} fields The current array of fields to add to.
  * @param {Item} item The item from which to derive the field.
  * @param {Object} params Additional parameters for the attack roll.
  * @private
@@ -512,7 +512,7 @@ async function _addFieldDamage(fields, item, params) {
         if (item._ammo && ItemUtility.getFlagValueFromItem(item._ammo, "quickVersatile", params.isAltRoll)) {
             item._ammo.system.damage.parts[0][0] = item._ammo.system.damage.versatile;
         }
-        
+
         const damageParts = [ ...item.system.damage.parts ];
         if (item._ammo) {
             damageParts.push(...item._ammo.system.damage.parts);
@@ -560,12 +560,12 @@ async function _addFieldDamage(fields, item, params) {
         }
 
         for (const [i, group] of damageTermGroups.entries()) {
-            let baseRoll = Roll.fromTerms(group.terms);            
+            let baseRoll = Roll.fromTerms(group.terms);
             let critRoll = null;
 
             if (params?.isCrit) {
-                baseRoll = await RollUtility.getCritBaseRoll(baseRoll, i, item.getRollData(), roll.options);
-                critRoll = await RollUtility.getCritRoll(baseRoll, i, item.getRollData(), roll.options);
+                baseRoll = await RollUtility.getCritRoll(baseRoll, i, item.getRollData(), roll.options);
+                critRoll = await RollUtility.getCritBaseRoll(baseRoll, i, item.getRollData(), roll.options);
             }
 
             fields.push([
@@ -584,7 +584,7 @@ async function _addFieldDamage(fields, item, params) {
 
 /**
  * Adds a render field for item other formula.
- * @param {Array} fields The current array of fields to add to. 
+ * @param {Array} fields The current array of fields to add to.
  * @param {Item} item The item from which to derive the field.
  * @private
  */
@@ -607,7 +607,7 @@ async function _addFieldOtherFormula(fields, item) {
 
 /**
  * Adds a render field for item tool check.
- * @param {Array} fields The current array of fields to add to. 
+ * @param {Array} fields The current array of fields to add to.
  * @param {Item} item The item from which to derive the field.
  * @param {Object} params Additional parameters for the attack roll.
  * @private
@@ -637,14 +637,14 @@ async function _addFieldAbilityCheck(fields, item, params) {
                 { type: "Ability", label: item.abilityMod, dictionary: "CONFIG.DND5E.abilities" }));
             return;
 		}
-        
+
         const bonuses = params?.bonuses?.filter(b => b.id === ROLL_TYPE.ABILITY_TEST).map(b => b.value);
 
         const roll = await item.actor.rollAbilityTest(item.abilityMod, {
             fastForward: true,
             chatMessage: false,
             advantage: params?.advMode > 0 ?? false,
-            disadvantage: params?.advMode < 0 ?? false,            
+            disadvantage: params?.advMode < 0 ?? false,
             parts: bonuses
         });
 
@@ -659,5 +659,5 @@ async function _addFieldAbilityCheck(fields, item, params) {
                 title: `Ability Check - ${CONFIG.DND5E.abilities[item.abilityMod].label}`
             }
         ]);
-    }    
+    }
 }
