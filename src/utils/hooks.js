@@ -10,7 +10,8 @@ import { SheetUtility } from "./sheet.js";
 
 export const HOOKS_CORE = {
     INIT: "init",
-    READY: "ready"
+    READY: "ready",
+    UPDATE_ITEM: "updateItem"
 }
 
 export const HOOKS_DND5E = {
@@ -23,7 +24,7 @@ export const HOOKS_DND5E = {
     PRE_USE_ITEM: "dnd5e.preUseItem",
     PRE_DISPLAY_CARD: "dnd5e.preDisplayCard",
     DISPLAY_CARD: "dnd5e.displayCard",
-    RENDER_CHAT_MESSAGE: "dnd5e.renderChatMessage",    
+    RENDER_CHAT_MESSAGE: "dnd5e.renderChatMessage",
     RENDER_ITEM_SHEET: "renderItemSheet5e",
     RENDER_ACTOR_SHEET: "renderActorSheet5e",
 }
@@ -42,7 +43,7 @@ export class HooksUtility {
     static registerModuleHooks() {
         Hooks.once(HOOKS_CORE.INIT, () => {
             LogUtility.log(`Initialising ${MODULE_TITLE}`);
-            
+
             SettingsUtility.registerSettings();
 
             HooksUtility.registerRollHooks();
@@ -69,7 +70,7 @@ export class HooksUtility {
     static registerRollHooks() {
         LogUtility.log("Registering roll hooks");
 
-        if (SettingsUtility.getSettingValue(SETTING_NAMES.QUICK_ABILITY_ENABLED)) { 
+        if (SettingsUtility.getSettingValue(SETTING_NAMES.QUICK_ABILITY_ENABLED)) {
             Hooks.on(HOOKS_DND5E.PRE_ROLL_ABILITY_TEST, (actor, config, abilityId) => {
                 RollUtility.processActorRoll(config);
                 return true;
@@ -81,29 +82,29 @@ export class HooksUtility {
             });
         }
 
-        if (SettingsUtility.getSettingValue(SETTING_NAMES.QUICK_SKILL_ENABLED)) { 
+        if (SettingsUtility.getSettingValue(SETTING_NAMES.QUICK_SKILL_ENABLED)) {
             Hooks.on(HOOKS_DND5E.PRE_ROLL_SKILL, (actor, config, skillId) => {
                 RollUtility.processActorRoll(config);
                 return true;
             });
         }
 
-        if (SettingsUtility.getSettingValue(SETTING_NAMES.QUICK_DEATH_ENABLED)) { 
+        if (SettingsUtility.getSettingValue(SETTING_NAMES.QUICK_DEATH_ENABLED)) {
             Hooks.on(HOOKS_DND5E.PRE_ROLL_DEATH_SAVE, (actor, config) => {
                 RollUtility.processActorRoll(config);
                 return true;
             });
         }
 
-        if (SettingsUtility.getSettingValue(SETTING_NAMES.QUICK_TOOL_ENABLED)) { 
+        if (SettingsUtility.getSettingValue(SETTING_NAMES.QUICK_TOOL_ENABLED)) {
             Hooks.on(HOOKS_DND5E.PRE_ROLL_TOOL_CHECK, (item, config) => {
                 RollUtility.processActorRoll(config);
                 return true;
             });
         }
 
-        if (SettingsUtility.getSettingValue(SETTING_NAMES.QUICK_ITEM_ENABLED)) { 
-            Hooks.on(HOOKS_DND5E.PRE_USE_ITEM, (item, config, options) => {               
+        if (SettingsUtility.getSettingValue(SETTING_NAMES.QUICK_ITEM_ENABLED)) {
+            Hooks.on(HOOKS_DND5E.PRE_USE_ITEM, (item, config, options) => {
                 if (!item || !CONFIG[MODULE_SHORT].validItemTypes.includes(item.type)) {
                     return true;
                 }
@@ -143,8 +144,8 @@ export class HooksUtility {
      */
     static registerSheetHooks() {
         LogUtility.log("Registering sheet hooks");
-        
-        if (SettingsUtility.getSettingValue(SETTING_NAMES.QUICK_ITEM_ENABLED)) { 
+
+        if (SettingsUtility.getSettingValue(SETTING_NAMES.QUICK_ITEM_ENABLED)) {
             Hooks.on(HOOKS_DND5E.RENDER_ITEM_SHEET, (app, html, data) => {
                 SheetUtility.setAutoHeightOnSheet(app);
                 SheetUtility.addModuleContentToItemSheet(app, html);
@@ -158,5 +159,14 @@ export class HooksUtility {
 
     static registerIntegrationHooks() {
         LogUtility.log("Registering integration hooks");
+    }
+
+    static registerUpdateHooks()  {
+        LogUtility.log("Registering update hooks");
+        Hooks.on(HOOKS_CORE.UPDATE_ITEM, (item, updateData) => {
+            if (updateData.system) {
+                ItemUtility.refreshFlagsOnItem(item)
+            }
+        })
     }
 }
