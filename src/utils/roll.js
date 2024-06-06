@@ -56,7 +56,7 @@ export class RollUtility {
         config.advantage ||= advMode === CONFIG.Dice.D20Roll.ADV_MODE.ADVANTAGE;
         config.disadvantage ||= advMode === CONFIG.Dice.D20Roll.ADV_MODE.DISADVANTAGE;
 
-        config.messageData[`flags.${MODULE_SHORT}`] = { 
+        config.messageData[`flags.${MODULE_SHORT}`] = {
             quickRoll: SettingsUtility.getSettingValue(SETTING_NAMES.QUICK_VANILLA_ENABLED) || !ignore,
             processed: true
         };
@@ -67,13 +67,13 @@ export class RollUtility {
         const altRoll = CoreUtility.eventToAltRoll(window.event)
 
         // For item rolls, check the alternate item roll setting to see if the alt key should ignore quick roll.
-        const ignore = (window.event.altKey && !altRoll) ?? false;
+        const ignore = (window.event?.altKey && !altRoll) ?? false;
 
         options.fastForward = !ignore;
         options.advantage ||= advMode === CONFIG.Dice.D20Roll.ADV_MODE.ADVANTAGE;
         options.disadvantage ||= advMode === CONFIG.Dice.D20Roll.ADV_MODE.DISADVANTAGE;
 
-        options.flags[MODULE_SHORT] = { 
+        options.flags[MODULE_SHORT] = {
             quickRoll: !ignore,
             advantage: options.advantage,
             disadvantage: options.disadvantage,
@@ -136,13 +136,13 @@ export class RollUtility {
         }
 
         const upgradedRoll = await RollUtility.ensureMultiRoll(roll);
-        
+
         const d20BaseTerm = upgradedRoll.terms.find(d => d.faces === 20);
         d20BaseTerm.keep(targetState);
         d20BaseTerm.modifiers.push(targetState);
-        
-        upgradedRoll.options.advantageMode = targetState === ROLL_STATE.ADV 
-            ? CONFIG.Dice.D20Roll.ADV_MODE.ADVANTAGE 
+
+        upgradedRoll.options.advantageMode = targetState === ROLL_STATE.ADV
+            ? CONFIG.Dice.D20Roll.ADV_MODE.ADVANTAGE
             : CONFIG.Dice.D20Roll.ADV_MODE.DISADVANTAGE;
 
         RollUtility.resetRollGetters(upgradedRoll);
@@ -164,7 +164,7 @@ export class RollUtility {
     static getCritTypeForDie(die, options = {}) {
         if (!die) return null;
 
-        const { crit, fumble } = _countCritsFumbles(die, options)		
+        const { crit, fumble } = _countCritsFumbles(die, options)
 
         return _getCritResult(crit, fumble);
     }
@@ -175,11 +175,11 @@ function _getCritResult(crit, fumble)
     if (crit > 0 && fumble > 0) {
         return CRIT_TYPE.MIXED;
     }
-    
+
     if (crit > 0) {
         return CRIT_TYPE.SUCCESS;
     }
-    
+
     if (fumble > 0) {
         return CRIT_TYPE.FAILURE;
     }
